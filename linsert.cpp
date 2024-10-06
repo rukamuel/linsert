@@ -32,9 +32,7 @@ void insertLicense(const std::string& phpFilePath, const std::string& licenseCon
     bool phpTagFound = false;
     bool licenseAlreadyExists = false;
 
-    // Read the file and detect where to insert the license
     while (std::getline(phpFile, line)) {
-        // Check if the license content already exists
         if (line.find(licenseContent) != std::string::npos) {
             licenseAlreadyExists = true;
             break;
@@ -42,23 +40,19 @@ void insertLicense(const std::string& phpFilePath, const std::string& licenseCon
 
         fileBuffer << line << "\n";
 
-        // Check for the first occurrence of "<?php"
         if (!phpTagFound && line.find("<?php") != std::string::npos) {
             phpTagFound = true;
-            // Insert the license content with spaces above and below
             fileBuffer << "\n" << licenseContent << "\n";  // Insert license and add a new line for spacing
         }
     }
 
     phpFile.close();
 
-    // If the license already exists, do not overwrite the file
     if (licenseAlreadyExists) {
         std::cout << "License already exists in file: " << phpFilePath << std::endl;
         return;
     }
 
-    // Rewrite the file with the inserted license
     std::ofstream outFile(phpFilePath);
     if (!outFile.is_open()) {
         std::cerr << "Failed to open file for writing: " << phpFilePath << std::endl;
@@ -68,7 +62,6 @@ void insertLicense(const std::string& phpFilePath, const std::string& licenseCon
     outFile.close();
 }
 
-// Function to process license content (removes <?php if present)
 std::string processLicenseContent(const std::string& licenseContent) {
     std::string processedContent = licenseContent;
     // Remove <?php from the beginning of the licenseContent if it exists
@@ -78,7 +71,6 @@ std::string processLicenseContent(const std::string& licenseContent) {
     return processedContent;
 }
 
-// Function to recursively process all PHP files in the given directory
 void processDirectory(const fs::path& directory, const std::string& licenseContent) {
     for (const auto& entry : fs::recursive_directory_iterator(directory)) {
         if (entry.is_regular_file() && entry.path().extension() == ".php") {
@@ -97,24 +89,19 @@ int main(int argc, char* argv[]) {
     std::string directoryPath = argv[1];
     std::string licenseFilePath = argv[2];
 
-    // Read the license content
     std::string licenseContent = readFile(licenseFilePath);
     if (licenseContent.empty()) {
         return 1;
     }
 
-    // Process the license content to remove <?php
     licenseContent = processLicenseContent(licenseContent);
 
-    // Remove any trailing newlines from license content to avoid double-spacing
     if (!licenseContent.empty() && licenseContent.back() == '\n') {
         licenseContent.pop_back();
     }
 
-    // Ensure the license content has proper formatting (single blank line before and after)
     licenseContent = "\n" + licenseContent + "\n";
 
-    // Process the directory
     processDirectory(directoryPath, licenseContent);
 
     std::cout << "License insertion completed." << std::endl;
